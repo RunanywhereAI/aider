@@ -223,14 +223,45 @@ def get_sdk_documentation() -> str:
     """
     Get the full SDK documentation for injection into prompts.
     
+    Loads documentation from all SDK docs files (Swift, Kotlin, React Native, Flutter).
+    
     Returns:
         SDK documentation string.
     """
-    # Try to load from resources file first
+    docs_parts = []
+    
+    # Try to load from resources/docs folder
     try:
-        resources_path = Path(__file__).parent.parent / "resources" / "sdk-documentation.md"
-        if resources_path.exists():
-            return resources_path.read_text(encoding="utf-8")
+        resources_path = Path(__file__).parent.parent / "resources"
+        docs_path = resources_path / "docs"
+        
+        if docs_path.exists():
+            # Load all SDK documentation files
+            sdk_folders = ["swift", "kotlin", "react-native", "flutter"]
+            
+            for sdk in sdk_folders:
+                sdk_path = docs_path / sdk
+                if sdk_path.exists():
+                    # Load Documentation.md
+                    doc_file = sdk_path / "Documentation.md"
+                    if doc_file.exists():
+                        content = doc_file.read_text(encoding="utf-8")
+                        docs_parts.append(f"\n\n{'='*80}\n{sdk.upper()} SDK DOCUMENTATION\n{'='*80}\n\n{content}")
+                    
+                    # Load ARCHITECTURE.md
+                    arch_file = sdk_path / "ARCHITECTURE.md"
+                    if arch_file.exists():
+                        content = arch_file.read_text(encoding="utf-8")
+                        docs_parts.append(f"\n\n{'='*80}\n{sdk.upper()} SDK ARCHITECTURE\n{'='*80}\n\n{content}")
+            
+            if docs_parts:
+                return "\n".join(docs_parts)
+        
+        # Fall back to main sdk-documentation.md
+        main_docs = resources_path / "sdk-documentation.md"
+        if main_docs.exists():
+            return main_docs.read_text(encoding="utf-8")
+            
     except Exception:
         pass
     
